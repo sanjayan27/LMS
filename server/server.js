@@ -13,10 +13,9 @@ await connectMongoDb()
 app.use(cors())
 app.use(express.json())
 
-//Routes
-// app.get('/',(req,res)=>{
-//     res.send(" Hello Express")
-// })
+app.get('/',(req,res)=>{
+    res.send(" Hello Express")
+})
 
 
 
