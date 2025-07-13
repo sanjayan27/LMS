@@ -12,12 +12,13 @@ await connectMongoDb()
 
 //middleware
 app.use(cors())
-app.use(express.json())
+app.use("/clerk", express.raw({ type: "application/json" }));
+
 
 app.get('/',(req,res)=>{
     res.send(" Hello Express")
 })
-app.post('/clerk',clerkWebhooks)
+app.post('/clerk',express.json(),clerkWebhooks)
 
 
 
