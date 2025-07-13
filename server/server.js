@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { connectMongoDb } from './config/mongoDB.js'
 import { clerkWebhooks } from './controller/webhook.js'
+
 dotenv.config()
 
 const app = express()
@@ -12,7 +13,6 @@ await connectMongoDb()
 
 //middleware
 app.use(cors())
-app.use("/clerk", express.raw({ type: "application/json" }));
 
 
 app.get('/',(req,res)=>{
