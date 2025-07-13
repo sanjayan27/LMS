@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { connectMongoDb } from './config/mongoDB.js'
+import { clerkWebhooks } from './controller/webhook.js'
 dotenv.config()
 
 const app = express()
@@ -16,6 +17,7 @@ app.use(express.json())
 app.get('/',(req,res)=>{
     res.send(" Hello Express")
 })
+app.post('/clerk',clerkWebhooks)
 
 
 
