@@ -3,6 +3,8 @@ import {dummyCourses} from "../assets/assets.js";
 import {dummyTestimonial} from "../assets/assets.js";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from "humanize-duration"
+import { useAuth, useUser } from "@clerk/clerk-react";
+import Loading from "../component/student/Loading.jsx";
 
 
 export const AppContext = createContext()
@@ -11,6 +13,14 @@ export const AppContextProvider = (props)=>{
     const [courseData,  setCourseData] = useState([])
     const [userTestimonials, setUserTestimonials] = useState([])
     const [userEnrolledData, setUserEnrolledData] = useState([])
+    const {user} = useUser()
+    const {getToken} = useAuth()
+
+
+
+
+
+
     const fetchUserData = async()=>{
         setCourseData(dummyCourses)
         setUserTestimonials(dummyTestimonial)
@@ -18,16 +28,12 @@ export const AppContextProvider = (props)=>{
     const fetchEnrolledUser = async()=>{
         setUserEnrolledData(dummyCourses)
     }
-    useEffect(() => {
-      fetchUserData(),
-      fetchEnrolledUser()
-    }, [])
-
+    
     const currency = import.meta.env.VITE_CURRENCY
-
+    
     const navigate = useNavigate()
     const [isEducator ,setIsEducator] = useState(true)
-
+    
     const handleRatings = (course) =>{
         if(course.courseRatings.length === 0){
             return 0
@@ -38,8 +44,8 @@ export const AppContextProvider = (props)=>{
         })
         return total
     }
-
-
+    
+    
     //total course content chapters time
     const calculateChaptertime =(chap)=>{
         let total = 0;
@@ -60,7 +66,21 @@ export const AppContextProvider = (props)=>{
         })
         return totalLectures
     }
+    const logToken =async()=>{
+        console.log(await getToken());
+        
+    }
+    
+    useEffect(() => {
+      fetchUserData(),
+      fetchEnrolledUser()
+    }, [])
 
+    useEffect(()=>{
+        if(user){
+            logToken()
+        }
+    },[user])
 
     const value ={
         currency,
