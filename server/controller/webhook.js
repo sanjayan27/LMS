@@ -1,9 +1,11 @@
 import { Webhook } from "svix";
 import User from "../model/user.model.js";
-import { Purchase } from "../model/Purchase.js"
+import { Purchase } from "../model/Purchase.js";
 import Course from "../model/Course.js";
-
 import Stripe from "stripe";
+import { configDotenv } from "dotenv";
+configDotenv()
+
 export const clerkWebhooks = async (req, res) => {
   try {
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
@@ -54,12 +56,13 @@ export const clerkWebhooks = async (req, res) => {
   }
 };
 
+const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
 //webhook for purchasing the course
-const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export const webhookPurchaseCurse = async (req, res) => {
+export const webhookPurchaseCurse = async(request, response) => {
+  console.log("webhook is workimg")
   const sig = request.headers["stripe-signature"];
-
+  
   let event;
 
   try {
@@ -69,8 +72,10 @@ export const webhookPurchaseCurse = async (req, res) => {
       process.env.STRIPE_WEBHOOK_KEY
     );
   } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
-  }
+  console.error("❌ Webhook signature validation failed:", err.message);
+  return response.status(400).send(`Webhook Error: ${err.message}`);
+}
+
 
   // Handle the event
   switch (event.type) {
@@ -83,19 +88,23 @@ export const webhookPurchaseCurse = async (req, res) => {
       });
 
       const { purchaseId } = session.data[0].metadata;
+      console.log("Metadata from Stripe session:", session.data[0].metadata);
+      console.log("Trying to find Purchase with ID:", purchaseId);
 
       const purchaseData = await Purchase.findById(purchaseId);
+      const userData = await User.findById(purchaseData.userId);
 
-      const userData = await User.findById(purchaseId.userId);
+      const courseData = await Course.findById(
+        purchaseData.courseId.toString()
+      );
 
-      const courseData = await Course.findById(purchaseId.courseId.toString());
-
-      courseData.enrolledStudents.push(userData._id);
-      userData.enrolledStudents.push(courseData._id);
-      purchaseData.status = "completed";
-
+      courseData.enrolledStudents.push(userData);
       await courseData.save();
+
+      userData.enrolledCourses.push(courseData._id);
       await userData.save();
+
+      purchaseData.status = "completed";
       await purchaseData.save();
 
       break;
