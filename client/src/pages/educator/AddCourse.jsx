@@ -3,15 +3,18 @@ import Quill from "quill";
 import uniqid from "uniqid";
 import { AppContext } from "../../context/AppContext";
 import { assets } from "../../assets/assets";
+import { toast } from "react-toastify";
+import axios from "axios";
+import Loading from "../../component/student/Loading";
 
 export const AddCourse = () => {
   const quillRef = useRef(null);
   const editorRef = useRef(null);
-  const { currency } = useContext(AppContext);
-
+  const { currency, BACKEND_URL, getToken } = useContext(AppContext);
+  const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [price, setPrice] = useState(0);
-  const [discount, setDiscount] = useState(0);
+  const [price, setPrice] = useState(null);
+  const [discount, setDiscount] = useState(null);
   const [image, setImage] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -24,84 +27,123 @@ export const AddCourse = () => {
     isPreviewFree: false,
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  };
-
   const handleAddChapter = (action, chapterId) => {
     if (action === "Add") {
       const title = prompt("Enter The Chapter Title: ");
-      if (title === "") {
-        return alert("enter the valid data");
-      } else {
-        const newChapterData = {
-          chapterId: uniqid(),
-          chapterTitle: title,
-          chapterContent: [],
-          collapsed: false,
-          chapterOrder : chapters.length > 0 ? chapters.slice(-1)[0].chapterOrder + 1 : 1
-        };
-        setChapters([...chapters, newChapterData]);
-      }
-    }
-    else if (action === "Remove") {
+
+      const newChapterData = {
+        chapterId: uniqid(),
+        chapterTitle: title,
+        chapterContent: [],
+        collapsed: false,
+        chapterOrder:
+          chapters.length > 0 ? chapters.slice(-1)[0].chapterOrder + 1 : 1,
+      };
+      setChapters([...chapters, newChapterData]);
+    } else if (action === "Remove") {
       setChapters(
         chapters.filter((chapter) => chapter.chapterId !== chapterId)
       );
-    }
-    else if (action === "Toggle") {
-
-      
+    } else if (action === "Toggle") {
       setChapters(
-        chapters.map((chapter)=>
-          
-         chapter.chapterId === chapterId ? { ...chapter,
-          collapsed: !chapter.collapsed} : chapter
-        
-      ))
+        chapters.map((chapter) =>
+          chapter.chapterId === chapterId
+            ? { ...chapter, collapsed: !chapter.collapsed }
+            : chapter
+        )
+      );
     }
   };
 
-  const handleSubmitLecture=(action,chapterId,lectureIndex)=>{
-    if(action === 'Add'){
-
-      setCurrentChapterId(chapterId)
-      setShowPopup(!showPopup)
-    }
-    else if(action === "Remove"){
+  const handleSubmitLecture = (action, chapterId, lectureIndex) => {
+    if (action === "Add") {
+      setCurrentChapterId(chapterId);
+      setShowPopup(!showPopup);
+    } else if (action === "Remove") {
       setChapters(
-        chapters.map((chapter)=>{
-          if(chapter.chapterId === chapterId){
-            chapter.chapterContent.splice(lectureIndex,1)
+        chapters.map((chapter) => {
+          if (chapter.chapterId === chapterId) {
+            chapter.chapterContent.splice(lectureIndex, 1);
           }
-          return chapter
+          return chapter;
         })
-      )
+      );
     }
-  }
-  const addLecture =()=>{
+  };
+  const addLecture = () => {
     setChapters(
-      chapters.map((chapter)=>{
-        if(chapter.chapterId === currentChapterId){
+      chapters.map((chapter) => {
+        if (chapter.chapterId === currentChapterId) {
           const newLectures = {
             ...lectures,
-            lectureOrder: chapter.chapterContent.length > 0 ? chapter.chapterContent.slice(-1)[0].lectureOrder + 1 : 1,
-            lectureId : uniqid()
+            lectureOrder:
+              chapter.chapterContent.length > 0
+                ? chapter.chapterContent.slice(-1)[0].lectureOrder + 1
+                : 1,
+            lectureId: uniqid(),
           };
-          chapter.chapterContent.push(newLectures)
+          chapter.chapterContent.push(newLectures);
         }
-        return chapter
+        return chapter;
       })
-    )
-    setShowPopup(!showPopup)
+    );
+    setShowPopup(!showPopup);
     setLectures({
-       lectureTitle: "",
-    lectureDuration: "",
-    lectureUrl: "",
-    isPreviewFree: false,
-    })
-  }
+      lectureTitle: "",
+      lectureDuration: "",
+      lectureUrl: "",
+      isPreviewFree: false,
+    });
+  };
 
+  const handleSubmit = async (e) => {
+    try {
+      setIsLoading(true);
+      e.preventDefault();
+      if (!image) {
+        toast.error("Thumbnail is not selected");
+      }
+      const courseData = {
+        courseTitle: title,
+        courseDescription: quillRef.current.root.innerHTML,
+        coursePrice: Number(price),
+        discount: Number(discount),
+        courseContent: chapters,
+      };
+
+      const formData = new FormData();
+
+      formData.append("courseData", JSON.stringify(courseData));
+      formData.append("image", image);
+
+      const token = await getToken();
+
+      const { data } = await axios.post(
+        BACKEND_URL + "/api/educator/add-course",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (data.success) {
+        toast.success(data.message);
+        setTitle("");
+        setPrice(null);
+        setDiscount(null);
+        setImage(null);
+        setChapters([]);
+        quillRef.current.root.innerHTML = "";
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!quillRef.current && editorRef.current) {
@@ -111,12 +153,20 @@ export const AddCourse = () => {
     }
   }, []);
 
-  return (
+  return !isLoading ? (
     <section
       className="h-screen overflow-scroll [&::-webkit-scrollbar]:hidden scrollbar-hide
      flex flex-col items-start justify-between md:p-8 md:pb-0 p-4 pt-8 pb-0"
     >
-      <form onSubmit={(e) => handleSubmit(e)} className="flex flex-col gap-5">
+      <form
+        onSubmit={(e) => handleSubmit(e)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault(); // 👈  cancels auto‑submit
+          }
+        }}
+        className="flex flex-col gap-5"
+      >
         <div className="flex flex-col gap-5">
           <label htmlFor="">Course Title</label>
           <input
@@ -138,6 +188,8 @@ export const AddCourse = () => {
             <input
               type="number"
               id="forPrice"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
               placeholder={`${currency}0`}
               className="bg-gray-500/10 rounded px-3 py-1 outline-none max-w-30"
             />
@@ -188,11 +240,14 @@ export const AddCourse = () => {
 
         <div>
           {chapters.map((chapter, chapIndex) => (
-            <div key={chapIndex} className="border border-gray-500/20  rounded  mb-5">
+            <div
+              key={chapIndex}
+              className="border border-gray-500/20  rounded  mb-5"
+            >
               <div className="bg-gray-500/10 rounded flex py-3 px-3 justify-between">
                 <div
                   className="flex items-center gap-2 cursor-pointer "
-                  onClick={() => handleAddChapter("Toggle",chapter.chapterId)}
+                  onClick={() => handleAddChapter("Toggle", chapter.chapterId)}
                 >
                   <img
                     src={assets.dropdown_icon}
@@ -214,24 +269,53 @@ export const AddCourse = () => {
                     }
                   />
                 </div>
-              </div> 
-              <div className={chapter.collapsed ? "p-3":""}>
+              </div>
+              <div className={chapter.collapsed ? "p-3" : ""}>
                 {chapter.collapsed && (
                   <div className=" flex flex-col gap-3">
                     {chapter.chapterContent.map((lecture, lectIndex) => (
-                      <div key={lectIndex}   className="flex items-center justify-between">
+                      <div
+                        key={lectIndex}
+                        className="flex items-center justify-between"
+                      >
                         <span className="capitalize">
                           {lectIndex + 1} {lecture.lectureTitle} -{" "}
-                          {<a  className="text-blue-600 font-custom2" href={lecture.lectureUrl}>Link</a>} - {lecture.isPreviewFree ? "Free Preview" : "Paid"}
+                          {
+                            <a
+                              className="text-blue-600 font-custom2"
+                              href={lecture.lectureUrl}
+                            >
+                              Link
+                            </a>
+                          }{" "}
+                          - {lecture.isPreviewFree ? "Free Preview" : "Paid"}
                         </span>
                         <span>
-                          <img src={assets.cross_icon} alt="" onClick={()=>handleSubmitLecture("Remove",chapter.chapterId , lectIndex)} className="cursor-pointer"/>
+                          <img
+                            src={assets.cross_icon}
+                            alt=""
+                            onClick={() =>
+                              handleSubmitLecture(
+                                "Remove",
+                                chapter.chapterId,
+                                lectIndex
+                              )
+                            }
+                            className="cursor-pointer"
+                          />
                         </span>
                       </div>
                     ))}
-                    <button className="bg-gray-500/10 px-3 rounded mt-4 cursor-pointer w-fit py-2 outline-none" onClick={()=>handleSubmitLecture('Add',chapter.chapterId)}>+ Add Lectures</button>
+                    <button
+                      className="bg-gray-500/10 px-3 rounded mt-4 cursor-pointer w-fit py-2 outline-none"
+                      onClick={() =>
+                        handleSubmitLecture("Add", chapter.chapterId)
+                      }
+                      type="button"
+                    >
+                      + Add Lectures
+                    </button>
                   </div>
-                  
                 )}
               </div>
             </div>
@@ -242,6 +326,7 @@ export const AddCourse = () => {
           <button
             className="bg-gray-500/10 px-3 py-2 rounded w-full cursor-pointer"
             onClick={() => handleAddChapter("Add")}
+            type="button"
           >
             + Add Chapter
           </button>
@@ -256,7 +341,12 @@ export const AddCourse = () => {
               <div className="bg-white text-gray-700 p-4 rounded w-full flex flex-col gap-3 max-w-80">
                 <div className="text-black font-custom2 flex justify-between items-center">
                   <h1 className="text-black font-custom2">Add Lectures</h1>
-                  <img src={assets.cross_icon} alt="Close" className="cursor-pointer" onClick={()=>setShowPopup(false)} />
+                  <img
+                    src={assets.cross_icon}
+                    alt="Close"
+                    className="cursor-pointer"
+                    onClick={() => setShowPopup(false)}
+                  />
                 </div>
                 <div className="mt-2 flex flex-col gap-5">
                   <div className="flex flex-col gap-1">
@@ -323,7 +413,10 @@ export const AddCourse = () => {
                   </div>
 
                   <div>
-                    <button className="w-full bg-blue-600 text-white rounded py-1 cursor-pointer" onClick={addLecture} >
+                    <button
+                      className="w-full bg-blue-600 text-white rounded py-1 cursor-pointer"
+                      onClick={addLecture}
+                    >
                       Add
                     </button>
                   </div>
@@ -337,5 +430,7 @@ export const AddCourse = () => {
         </button>
       </form>
     </section>
+  ) : (
+    <Loading />
   );
 };

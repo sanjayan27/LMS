@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import Logo from "../../assets/favicon.svg";
+import Logo from "../../assets/favicon.png";
 import {assets} from "../../assets/assets.js";
 import {UserButton, useUser } from '@clerk/clerk-react'
  const Navbar = () => {
@@ -12,7 +12,7 @@ import {UserButton, useUser } from '@clerk/clerk-react'
         className=" cursor-pointer flex items-center space-x-3 "
         to={ "/"}
       >
-        <img src={Logo} alt="Logo" className="h-8 w-8" />
+        <img src={Logo} alt="Logo" className="h-10 w-10" />
         <span className="font-bold text-xl text-gray-800">StudPlat</span>
       </Link>
       <div className='flex items-center text-gray-500 gap-3'>

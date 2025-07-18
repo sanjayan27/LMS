@@ -6,6 +6,8 @@ import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import RightSectionCourse from "../../component/student/RightSectionCourse";
 import Loading from "../../component/student/Loading";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export const CourseDetails = () => {
   const { id } = useParams();
@@ -15,13 +17,44 @@ export const CourseDetails = () => {
     handleRatings,
     calculateChaptertime,
     calculateCourseTime,
+    BACKEND_URL,
+    userData,
+    getToken,
   } = useContext(AppContext);
+
   const [loading, setLoading] = useState(true);
   const [toggleData, setToggleData] = useState({});
   const [previewData, setPreviewData] = useState(null);
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
+ 
+ 
 
+  const enrollCourse = async () => {
+    try {
+      const token = await getToken();
+      if (!userData) {
+        toast.warn("User needs to Login");
+      }
+      if (alreadyEnrolled) {
+        toast.warn("User Alrady Registered this Course");
+      } else {
+        const { data } = await axios.post(
+          BACKEND_URL + "/api/user/purchase",
+          { courseId: course._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-
+        if (data.success) {
+          const { session_url } = data;
+          window.location.replace(session_url);
+        } else {
+          toast.error(data.message);
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   const toggleFunction = (index) => {
     setToggleData((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -39,7 +72,14 @@ export const CourseDetails = () => {
 
   useEffect(() => {
     fetchDataUser();
-  }, [course]);
+    // courseDataById();
+  }, [courseData]);
+
+  useEffect(() => {
+    if (userData && course) {
+      setAlreadyEnrolled(userData.enrolledCourses.includes(course._id));
+    }
+  }, [course, userData]);
 
   return (
     <section className="mt-15 ">
@@ -78,8 +118,8 @@ export const CourseDetails = () => {
                     {course.courseRatings.length > 1 ? "ratings" : "rating"})
                   </p>
                   <p>
-                    {course.enrolledStudents.length}{" "}
-                    {course.enrolledStudents.length > 1
+                    {course?.enrolledStudents?.length}{" "}
+                    {course?.enrolledStudents?.length > 1
                       ? "students"
                       : "student"}
                   </p>
@@ -87,7 +127,9 @@ export const CourseDetails = () => {
               </div>
               <p className="text-gray-600 text-sm">
                 Course by{" "}
-                <span className="underline text-blue-600">Sanjay</span>
+                <span className="underline text-blue-600">
+                  {course.educator.name}
+                </span>
               </p>
             </div>
             <div>
@@ -95,7 +137,7 @@ export const CourseDetails = () => {
                 course structure
               </h2>
               <div className="flex flex-col gap-2 mt-5">
-                {course.courseContent.map((chapter, index) => (
+                {course?.courseContent?.map((chapter, index) => (
                   <div
                     key={index}
                     className=" rounded w-[75vw]  lg:max-w-[40vw]  bg-white border overflow-hidden border-gray-400"
@@ -146,9 +188,19 @@ export const CourseDetails = () => {
                             </div>
                             <div className="flex text-xs md:text-sm font-custom2 gap-2">
                               <div className="text-blue-600 font-semibold capitalize cursor-pointer">
-                                {lecture.isPreviewFree && <p   
-                                  onClick={()=>setPreviewData({videoId: lecture.lectureUrl.split('/').pop()})}
-                                >preview</p>}
+                                {lecture.isPreviewFree && (
+                                  <p
+                                    onClick={() =>
+                                      setPreviewData({
+                                        videoId: lecture.lectureUrl
+                                          .split("/")
+                                          .pop(),
+                                      })
+                                    }
+                                  >
+                                    preview
+                                  </p>
+                                )}
                               </div>
                               <div>
                                 {humanizeDuration(
@@ -160,27 +212,31 @@ export const CourseDetails = () => {
                           </li>
                         ))}
                       </ul>
-                      
                     </div>
                   </div>
                 ))}
                 <div className="mt-10 rich-text">
-                        <p
-                          dangerouslySetInnerHTML={{
-                            __html: course.courseDescription,
-                          }}
-                          className="text-gray-600"
-                        ></p>
-                      </div>
+                  <p
+                    dangerouslySetInnerHTML={{
+                      __html: course.courseDescription,
+                    }}
+                    className="text-gray-600"
+                  ></p>
+                </div>
               </div>
             </div>
           </section>
           <section className=" flex justify-center order-1 lg:order-2  px-5 md:px-0 mb-12 lg:mb-0 ">
-            <RightSectionCourse course={course} previewData={previewData}/>
+            <RightSectionCourse
+              course={course}
+              previewData={previewData}
+              enrollCourse={enrollCourse}
+              alreadyEnrolled = {alreadyEnrolled}
+            />
           </section>
         </section>
       ) : (
-        <Loading/>
+        <Loading />
       )}
     </section>
   );

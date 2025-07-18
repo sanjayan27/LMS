@@ -15,10 +15,16 @@ import Footer from "./component/student/Footer";
 import StudentsEnrolled from './pages/educator/StudentsEnrolled';
 import "quill/dist/quill.snow.css"
 import { SignIn } from "@clerk/clerk-react";
+ import { ToastContainer } from 'react-toastify';
+import { LoadingEnrollments } from "./pages/student/LoadingEnrollments";
+import Loading from "./component/student/Loading";
+
+
 const App = () => {
   const isEducatorPage = useMatch("/educator/*");
   return (
-    <div className="bg-orange-100">
+<div className="min-h-screen bg-gradient-to-r  from-[#c1e0f8] to-white">
+      <ToastContainer />
       {!isEducatorPage && <Navbar />}
 
       <Routes>
@@ -29,6 +35,7 @@ const App = () => {
         <Route path="/course-details/:id" element={<CourseDetails />} />
         <Route path="/enrollments" element={<Enrollments />} />
         <Route path="/player/:id" element={<Player />} />
+        <Route path = "/loading/:path" element={<Loading/>}/>
         <Route path="/educator" element={<Educator />}>
           <Route path="/educator/" element={<Dashboard />} />
           <Route path="add-course" element={<AddCourse />} />

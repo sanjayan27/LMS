@@ -1,13 +1,17 @@
 import React, { useContext } from "react";
-import { FaHome, FaBook, FaUsers, FaCog } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
+import { BiBookAdd } from "react-icons/bi";
+import { BsPeople } from "react-icons/bs";
+import { IoHomeOutline } from "react-icons/io5";
+import { LiaSwatchbookSolid } from "react-icons/lia";
 
 const sidebarItems = [
-  { name: "Dashboard", path: "/educator", icon: <FaHome /> },
-  { name: "Add Courses", path: "/educator/add-course", icon: <FaBook /> },
-  { name: "Students Enrolled", path: "/educator/students-enrolled", icon: <FaCog /> },
-  { name: "My Courses", path: "/educator/my-course", icon: <FaUsers /> },
+  { name: "Dashboard", path: "/educator", icon: <IoHomeOutline /> },
+  { name: "Add Courses", path: "/educator/add-course", icon: <BiBookAdd />},
+  { name: "Students Enrolled", path: "/educator/students-enrolled", icon:<BsPeople />
+ },
+  { name: "My Courses", path: "/educator/my-course", icon:<LiaSwatchbookSolid /> },
 ];
 
 const Sidebar = () => {

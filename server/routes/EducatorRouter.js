@@ -2,7 +2,7 @@ import express from 'express'
 import { addCourse, educatorDashboardData, findCourse, getEnrolledStudentData, updateRoleToEducator } from '../controller/educatorController.js'
 import upload from '../middleware/multer.js'
 import protectAuthEducator from '../middleware/authMiddleware.js'
-import { fetCourseById } from '../controller/courseContoller.js'
+
 
 const educatorRoutes = express.Router()
 

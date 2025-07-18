@@ -7,7 +7,6 @@ import ReviewsAndRatings from "./ReviewsAndRatings";
 
 const CourseCard = ({ course }) => {
   const { currency, handleRatings } = useContext(AppContext);
-
   return (
     <section className="flex justify-center ">
       {handleRatings(course) >= 0  && (
@@ -19,11 +18,11 @@ const CourseCard = ({ course }) => {
           <img
             src={course.courseThumbnail}
             alt=""
-            className="w-80 sm:w-70  rounded"
+            className="w-80 sm:w-70 h-40 rounded"
           />
           <div className="flex flex-col font-new p-3 gap-1">
             <h3>{course.courseTitle}</h3>
-            <p>{course.educator.name}</p>
+            <p>{course.educator?.name}</p>
             <ReviewsAndRatings course={course}/>
             <div className="flex items-center gap-3">
               <p>

@@ -2,22 +2,43 @@ import React, { useContext, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
 import { dummyStudentEnrolled } from '../../assets/assets'
 import { useEffect } from 'react'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+import Loading from '../../component/student/Loading'
 
  const StudentsEnrolled = () => {
 
-  // const {courseData} = useContext(AppContext)
+  const {BACKEND_URL , isEducator , getToken} = useContext(AppContext)
   const [stdEnrolled,setStdEnrolled] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const fetchEnrolledData = ()=>{
-    setStdEnrolled(dummyStudentEnrolled)
+  const fetchEnrolledData =async()=>{
+    try {
+      setIsLoading(true)
+      const token = await getToken()
+      const {data} = await axios.get(BACKEND_URL + '/api/educator/enrolled-students', {headers : {authorization: `Bearer ${token}`}})
+      if(data.success){
+        setStdEnrolled(data.enrolledStudent.reverse())
+      }else{
+        toast.error(data.message)
+      }
+
+    } catch (error) {
+      toast.error(error.message)
+    }finally{
+      setIsLoading(false)
+    }
+
   }
   useEffect(()=>{
-    fetchEnrolledData()
-  },[stdEnrolled])
+   if(isEducator){
+     fetchEnrolledData()
+   }
+  },[isEducator])
 
 
   return (
-    stdEnrolled && (
+    stdEnrolled ? (
       <section className=" gap-10 h-screen flex  flex-col items-start md:p-8 md:pb-0 p-4 pt-8 pb-0">
         <div>
           <p className="capitalize text-xl font-custom2">Students Enrolled</p>
@@ -56,7 +77,7 @@ import { useEffect } from 'react'
     </table>
     </section>
     
-  ))
+  ): <Loading/>)
 }
 
 

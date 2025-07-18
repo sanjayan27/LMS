@@ -2,13 +2,13 @@ import React from "react";
 import { FaChalkboardTeacher } from "react-icons/fa";
 import { assets } from "../../assets/assets";
 
-import Logo from "../../assets/favicon.svg";
+import Logo from "../../assets/favicon.png";
 const Footer = () => {
     return (
         <footer className="w-full bg-transparent border-t border-gray-300 py-4 flex flex-col md:flex-row items-center justify-between px-6">
             {/* Section 1: Name and Logo */}
             <div className="flex items-center gap-2 mb-2 md:mb-0">
-                <img src={Logo} alt="" />
+                <img src={Logo} alt="" className="w-10 h-10" />
                 <span className="font-semibold text-lg text-gray-800">StudPlat</span>
             </div>
             {/* Section 2: Copyright */}

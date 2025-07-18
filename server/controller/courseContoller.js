@@ -3,7 +3,7 @@ import Course from "../model/Course.js";
 export const getAllCourse = async (req, res) => {
   try {
     const courses = await Course.find({ isPublished: true })
-      .select(["-courseContent", "-enrolledStudents"])
+      .select(["-enrolledStudents"])
       .populate({ path: "educator" });
 
 
@@ -11,7 +11,7 @@ export const getAllCourse = async (req, res) => {
       success: true,
       error: false,
       message: "all courses  are listed",
-      courses
+      data : courses
     });
   } catch (error) {
     res.status(404).json({
@@ -28,7 +28,6 @@ export const getAllCourse = async (req, res) => {
 export const fetCourseById=async(req,res)=>{
     try {
         const { id } = req.params
-
       const courseData = await Course.findById(id).populate({path : 'educator'})
 
       //remove lecture url if prview is  false 
@@ -41,7 +40,8 @@ export const fetCourseById=async(req,res)=>{
       })
 
         res.json( {
-          courseData , success : true , error:false , message: 'teh individual course is listed  by id'
+          courseData , success : true , error:false , message: 'the individual course is listed  by id',
+  
         })
         
     } catch (error) {

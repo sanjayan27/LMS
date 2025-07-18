@@ -1,23 +1,52 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
-import Logo from "../../assets/favicon.svg";
+import Logo from "../../assets/favicon.png";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
 import { AppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 const Navbar = () => {
   const { openSignIn } = useClerk();
   const { user } = useUser();
-  const { navigate, isEducator } = useContext(AppContext);
+  const { navigate, isEducator, getToken, setIsEducator, BACKEND_URL } =
+    useContext(AppContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const toBecomeEducator = async () => {
+    try {
+      if (isEducator) {
+        navigate("/educator");
+        return;
+      }
+      const token = await getToken();
+      const { data } = await axios.get(
+        BACKEND_URL + "/api/educator/update-role",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (data.success) {
+        setIsEducator(true);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
-    <nav className="flex items-center justify-between bg-white shadow px-8 py-4 relative">
+    <nav className="flex items-center justify-between bg-white  shadow px-8 py-4 relative">
       {/* Logo & Name */}
       <div
         className=" cursor-pointer flex items-center space-x-3 "
         onClick={() => navigate("/")}
       >
-        <img src={Logo} alt="Logo" className="h-8 w-8" />
+        <img src={Logo} alt="Logo" className="h-10 w-10" />
         <span className="font-bold text-xl text-gray-800">StudPlat</span>
       </div>
 
@@ -30,7 +59,7 @@ const Navbar = () => {
           to="/courses"
           className="text-gray-700 hover:text-blue-600 font-medium"
         >
-          Our Courses
+          Courses
         </Link>
         <Link
           to="/enrollments"
@@ -39,7 +68,7 @@ const Navbar = () => {
           My Enrollments
         </Link>
         <button
-          onClick={() => navigate("/educator")}
+          onClick={toBecomeEducator}
           className="cursor-pointer text-gray-700 hover:text-blue-600 font-medium"
         >
           {isEducator ? "Educator Dashboard" : "Become Educator"}
@@ -144,7 +173,7 @@ const Navbar = () => {
             className="text-gray-700 hover:text-blue-600 font-medium"
             onClick={() => setSidebarOpen(false)}
           >
-            Our Courses
+            Courses
           </Link>
           <Link
             to="/enrollments"
@@ -154,7 +183,7 @@ const Navbar = () => {
             My Enrollments
           </Link>
           <button
-            onClick={() => navigate("/educator")}
+            onClick={toBecomeEducator}
             className=" text-start text-gray-700 hover:text-blue-600 font-medium"
           >
             {isEducator ? "Educator Dashboard" : "Become Educator"}

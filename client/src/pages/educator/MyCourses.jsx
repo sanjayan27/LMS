@@ -1,20 +1,31 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
+import axios from "axios";
+import Loading from "../../component/student/Loading";
 
 export const MyCourses = () => {
-  const { currency, courseData } = useContext(AppContext);
+  const { currency,BACKEND_URL, getToken , isEducator } = useContext(AppContext);
   const [courses, setCourses] = useState(null);
 
-  const fetchCourseData = () => {
-    setCourses(courseData);
+  const fetchCourseData = async() => {
+    try {
+      const token = await getToken()
+      const {data} = await axios.get(BACKEND_URL+ '/api/educator/course-data' , { headers : {Authorization :`Bearer ${token}`}})
+      data.success && setCourses(data.course)
+      
+    } catch (error) { 
+      toast.error(error.message)
+    }
   };
 
   useEffect(() => {
-    fetchCourseData();
-  }, [courses]);
+    if(isEducator){
+      fetchCourseData();
+    }
+  }, [isEducator]);
 
-  return (
-    courseData && (
+  return courses ? (
       <section className=" gap-10 h-screen flex  flex-col items-start md:p-8 md:pb-0 p-4 pt-8 pb-0">
         <div>
           <p className="capitalize text-xl font-custom2">my courses</p>
@@ -39,12 +50,12 @@ export const MyCourses = () => {
                   <td className="px-4 py-3 text-gray-700">
                     {currency}
                     {(
-                      course.enrolledStudents.length * course.coursePrice -
+                      course.enrolledStudents?.length * course.coursePrice -
                       (course.coursePrice * course.discount) / 100
                     ).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-gray-700">
-                    {course.enrolledStudents.length}
+                    {course.enrolledStudents?.length}
                   </td>
                   <td className="px-4 py-3 text-gray-700">
                     {new Date(course.createdAt).toLocaleDateString()}
@@ -54,6 +65,6 @@ export const MyCourses = () => {
           </tbody>
         </table>
       </section>
-    )
-  );
+    
+  ):<Loading/>
 };

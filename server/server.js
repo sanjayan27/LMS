@@ -23,7 +23,7 @@ app.use(clerkMiddleware())
 
 app.use('/api/user',express.json(),userRouter)
 app.use('/api/educator',express.json(),educatorRoutes)
-app.use('/api/course/',express.json(),courseRouter)
+app.use('/api/course',express.json(),courseRouter)
 
 app.get('/',(req,res)=>{
     res.send(" Hello Express")

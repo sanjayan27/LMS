@@ -77,7 +77,7 @@ const courseSchema = new mongoose.Schema(
     },
     isPublished: {
       type: Boolean,
-      required: true,
+      default: true,
     },
     courseContent: [chapterSchema],
     courseRatings: [

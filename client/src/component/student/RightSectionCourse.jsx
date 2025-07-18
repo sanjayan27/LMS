@@ -4,10 +4,9 @@ import { AppContext } from "../../context/AppContext";
 import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import YouTube from "react-youtube"
-const RightSectionCourse = ({ course,previewData }) => {
+const RightSectionCourse = ({ course,previewData,enrollCourse,alreadyEnrolled}) => {
   const { currency, handleRatings, calculateTotalNoLectures ,calculateCourseTime} =
     useContext(AppContext);
-    const [isEnrolled, setIsEnrolled] = useState(false)
   
 
   return (
@@ -57,7 +56,7 @@ const RightSectionCourse = ({ course,previewData }) => {
               {course.courseContent.length > 1 ? "lessons" : "lesson"}
             </div>
           </div>
-        <button className="w-full mt-1 cursor-pointer bg-blue-700 rounded text-white p-1">{isEnrolled ? "Already Enrolled": "Enroll now"}</button>
+        <button onClick={enrollCourse} className="w-full mt-1 cursor-pointer bg-blue-700 rounded text-white p-1">{alreadyEnrolled ? "Already Enrolled": "Enroll now"}</button>
         <div>
           <h1 className="font-semibold text-lg mb-2 mt-2">What's in the course?</h1>
           <ul className="list-disc px-7 text-gray-600">

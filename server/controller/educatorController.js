@@ -2,13 +2,13 @@ import { clerkClient } from "@clerk/express";
 import Course from "../model/Course.js";
 import { v2 as cloudinary } from "cloudinary";
 import { Purchase } from "../model/Purchase.js";
-
+import User from "../model/user.model.js"
 //update the role to educator
 export const updateRoleToEducator = async (req, res) => {
   try {
     const userId = req.auth.userId;
 
-    const a = await clerkClient.users.updateUserMetadata(userId, {
+    await clerkClient.users.updateUserMetadata(userId, {
       publicMetadata: {
         role: "educator",
       },
@@ -81,9 +81,7 @@ export const educatorDashboardData = async (req, res) => {
     const educator = req.auth.userId;
     const courses = await Course.find({ educator });
     const totalCourses = courses.length;
-    const coursesIds = courses.map((course) => {
-      course._id;
-    });
+    const coursesIds = courses.map((course) => course._id);
 
     //calculate total earning
     const purchase = await Purchase.find({
@@ -100,70 +98,74 @@ export const educatorDashboardData = async (req, res) => {
     const enrolledStudents = [];
 
     for (const course of courses) {
-      const students = await User.find(
-        {
-          _id: { $in: course.enrolledStudents },
-        },
-        "name imageUrl"
-      );
-      students.forEach(student=>{
-        enrolledStudents.push({
+      if (
+        Array.isArray(course.enrolledStudents) &&
+        course.enrolledStudents.length > 0
+      ) {
+        const students = await User.find(
+          { _id: { $in: course.enrolledStudents } },
+          "name imageUrl"
+        );
+
+        students.forEach((student) => {
+          enrolledStudents.push({
             courseTitle: course.courseTitle,
-            student
-        })
-      })
+            student,
+          });
+        });
+      }
     }
 
     res.status(200).json({
-        success: true  ,
-        error : false ,
-        dashboardData : {
-            totalEarnings,
-            enrolledStudents,
-            totalCourses,
-        }
-    })
+      success: true,
+      error: false,
+      dashboardData: {
+        totalEarnings,
+        enrolledStudents,
+        totalCourses,
+      },
+    });
   } catch (error) {
     res
       .status(404)
-      .json({ message: error.message, success: true, error: false });
+      .json({ message: error.message, success: false, error: true });
   }
 };
 
 //total enrolled students for single educator\
 
-export const getEnrolledStudentData =async(req,res)=>{
+export const getEnrolledStudentData = async (req, res) => {
   try {
-
-    const educator = req.auth.userId
-    const courses = await Course.find({educator})    
-    const courseIds = courses.map((course)=>{
-      course._id
-    })
+    const educator = req.auth.userId;
+    const courses = await Course.find({ educator });
+    const courseIds = courses.map((course) => {
+      return course._id;
+    });
 
     const purchase = await Purchase.find({
-      courseId: {$in : courseIds},
-      status: 'completed'
-    }).populate('userId' , 'name imageUrl').populate('courseId','courseTitle')
+      courseId: { $in: courseIds },
+      status: "completed",
+    })
+      .populate("userId", "name imageUrl")
+      .populate("courseId", "courseTitle");
 
-    const enrolledStudent = purchase.map(purchase=> ({
-      student : purchase.userId,
-      courseTitle : purchase.courseId.courseTitle,
-      purchased : purchase.createdAt
-    }))
+    const enrolledStudent = purchase.map((purchase) => ({
+      student: purchase.userId,
+      courseTitle: purchase.courseId.courseTitle,
+      purchased: purchase.createdAt,
+    }));
 
     res.status(200).json({
-      success : true,
-      error : false,
+      success: true,
+      error: false,
       message: "enrolled students are listed",
-      enrolledStudent
-    })
-    
+      enrolledStudent,
+    });
   } catch (error) {
     res.status(404).json({
-      success:false,
-      error:true,
-      message : error.message
-    })
+      success: false,
+      error: true,
+      message: error.message,
+    });
   }
-}
+};

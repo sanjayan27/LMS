@@ -3,6 +3,7 @@ import Course from "../model/Course.js";
 import { Purchase } from "../model/Purchase.js";
 import User from "../model/user.model.js";
 import { Progress } from "../model/courseProgressModel.js";
+//getting user data
 
 export const getUserData = async (req, res) => {
   try {
@@ -31,16 +32,16 @@ export const getUserData = async (req, res) => {
   }
 };
 
+//getting user enrolled data
 export const userEnrolledCourses = async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const userData = await User.findById(userId);
-
+    const userData = await User.findById(userId).populate({path:'enrolledCourses'})
     res.json({
       message: "User found",
       success: true,
       error: false,
-      userData: userData.enrolledCourses,
+      enrolledCourses: userData.enrolledCourses,
     });
   } catch (error) {
     res.status(404).json({
@@ -51,6 +52,7 @@ export const userEnrolledCourses = async (req, res) => {
   }
 };
 
+//updating user purhcased data
 export const purchaseCourse = async (req, res) => {
   try {
     const userId = req.auth.userId;
@@ -137,6 +139,7 @@ export const updateCourseProgress = async (req, res) => {
         });
       }
       progress.lectureCompleted.push(lectureId);
+      await progress.save()
     } else {
       await Progress.create({
         userId,
@@ -159,7 +162,7 @@ export const getCourseProgressData = async (req, res) => {
   try {
     const userId = req.auth.userId;
     const { courseId } = req.body;
-    const getProgress = await Progress.findOne({ userID, courseId });
+    const getProgress = await Progress.findOne({ userId, courseId });
 
     res.status(200).json({
       success: true,
@@ -185,7 +188,7 @@ export const addUserRating = async (req, res) => {
   }
 
   try {
-    const course = await Course.findById({ courseId });
+    const course = await Course.findById( courseId );
 
     if (!course) {
       res.status(404).json({
@@ -215,7 +218,7 @@ export const addUserRating = async (req, res) => {
       course.courseRatings.push({ userId, rating });
     }
 
-    await Course.save();
+    await course.save();
 
     res.status(200).json({
       success: true,
