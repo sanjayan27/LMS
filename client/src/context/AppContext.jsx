@@ -25,7 +25,7 @@ export const AppContextProvider = (props) => {
     try {
       const { data } = await axios.get(BACKEND_URL + "/api/course/all-course");
       if (data.success) {
-        console.log(data)
+   
         setCourseData(data.data);
       } else {
         toast.error(data.message);
@@ -52,7 +52,7 @@ export const AppContextProvider = (props) => {
         },
       });
       if (data.success) {
-        // console.log("the data from user",data.userData)
+        
         setUserData(data.userData);
 
       } else {
@@ -120,10 +120,7 @@ export const AppContextProvider = (props) => {
     });
     return totalLectures;
   };
-  // const logEvent = async()=>{
-  //   console.log(await getToken())
 
-  // }
 
   useEffect(() => {
     fetchAllCourse();

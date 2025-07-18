@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 export const LoadingEnrollments = () => {
     const {path} = useParams()
     const navigate = useNavigate()
-    console.log(path);
+  
     
     useEffect(()=>{
         if(path){
